@@ -21,8 +21,8 @@ from streamlit_extras.switch_page_button import switch_page
 import dotenv
 dotenv.load_dotenv()
 
-# os.environ["http_proxy"] = "127.0.0.1:9788"
-# os.environ["https_proxy"] = "127.0.0.1:9788"
+os.environ["http_proxy"] = "127.0.0.1:9788"
+os.environ["https_proxy"] = "127.0.0.1:9788"
 
 def check_password():
     """Returns `True` if the user had the correct password."""
@@ -68,7 +68,7 @@ def is_valid_string(s):
             return ''
     return ''
 
-def get_response(temperature, system_prompt, user_query, turbo_history):
+def get_response(temperature, system_prompt, user_query, turbo_history, model):
     template = f"""
     You are a helpful assistant. 
     {system_prompt}
@@ -82,7 +82,7 @@ def get_response(temperature, system_prompt, user_query, turbo_history):
     prompt = ChatPromptTemplate.from_template(template)
 
     llm = ChatOpenAI(
-        model='gpt-4-turbo-2024-04-09',
+        model=model,
         temperature=temperature,
         streaming=True
     )
@@ -110,6 +110,9 @@ with col22:
     temperature = st.slider("大模型温度选择（数字越大越多样，越小越严谨）", min_value=0.0, max_value=1.0, value=0.2, step=0.1,
                            key="slider2")
 
+
+    # 选择大模型的型号
+    model = st.selectbox("选择大模型", ["gpt-3.5-turbo-0125", "gpt-4-turbo-2024-04-09"], key="model_style")
 
     system_prompt = st.text_area("系统提示（给大模型的预设规范,输出则生效）", value="", height=200, max_chars=1000, key="system_prompt2")
     print(system_prompt)
@@ -160,7 +163,7 @@ with col11:
 
         with st.chat_message("AI"):
             response = st.write_stream(
-                get_response(temperature, system_regulate, user_query, st.session_state.turbo_history))
+                get_response(temperature, system_regulate, user_query, st.session_state.turbo_history, model))
 
         st.session_state.turbo_history.append(AIMessage(content=response))
 
