@@ -19,37 +19,41 @@ from streamlit_extras.stodo import to_do
 import os
 from streamlit_extras.switch_page_button import switch_page
 import dotenv
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_groq import ChatGroq
+
+
 dotenv.load_dotenv()
 
 os.environ["http_proxy"] = "127.0.0.1:9788"
 os.environ["https_proxy"] = "127.0.0.1:9788"
-
-def check_password():
-    """Returns `True` if the user had the correct password."""
-
-    def password_entered():
-        """Checks whether a password entered by the user is correct."""
-        if hmac.compare_digest(st.session_state["password"], st.secrets["password"]):
-            st.session_state["password_correct"] = True
-            del st.session_state["password"]  # Don't store the password.
-        else:
-            st.session_state["password_correct"] = False
-
-    # Return True if the password is validated.
-    if st.session_state.get("password_correct", False):
-        return True
-
-    # Show input for password.
-    st.text_input(
-        "Password", type="password", on_change=password_entered, key="password"
-    )
-    if "password_correct" in st.session_state:
-        st.error("😕 Password incorrect")
-    return False
-
-
-if not check_password():
-    st.stop()  # Do not continue if check_password is not True.
+#
+# def check_password():
+#     """Returns `True` if the user had the correct password."""
+#
+#     def password_entered():
+#         """Checks whether a password entered by the user is correct."""
+#         if hmac.compare_digest(st.session_state["password"], st.secrets["password"]):
+#             st.session_state["password_correct"] = True
+#             del st.session_state["password"]  # Don't store the password.
+#         else:
+#             st.session_state["password_correct"] = False
+#
+#     # Return True if the password is validated.
+#     if st.session_state.get("password_correct", False):
+#         return True
+#
+#     # Show input for password.
+#     st.text_input(
+#         "Password", type="password", on_change=password_entered, key="password"
+#     )
+#     if "password_correct" in st.session_state:
+#         st.error("😕 Password incorrect")
+#     return False
+#
+#
+# if not check_password():
+#     st.stop()  # Do not continue if check_password is not True.
 
 
 
@@ -81,11 +85,17 @@ def get_response(temperature, system_prompt, user_query, turbo_history, model):
 
     prompt = ChatPromptTemplate.from_template(template)
 
-    llm = ChatOpenAI(
-        model=model,
-        temperature=temperature,
-        streaming=True
-    )
+    model_list = ['llama3-70b-8192', 'llama3-8b-8192', 'gemma-7b-it','mixtral-8x7b-32768']
+
+    if model in model_list:
+        llm = ChatGroq(temperature=temperature, groq_api_key="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", model_name=model)
+
+    else:
+        llm = ChatOpenAI(
+            model=model,
+            temperature=temperature,
+            streaming=True
+        )
 
     chain = prompt | llm | StrOutputParser()
 
@@ -112,7 +122,7 @@ with col22:
 
 
     # 选择大模型的型号
-    model = st.selectbox("选择大模型", ["gpt-3.5-turbo-0125", "gpt-4-turbo-2024-04-09"], key="model_style")
+    model = st.selectbox("选择大模型", ["gpt-3.5-turbo-0125", "gpt-4-turbo-2024-04-09",'llama3-70b-8192', 'llama3-8b-8192', 'gemma-7b-it','mixtral-8x7b-32768'], key="model_style")
 
     system_prompt = st.text_area("系统提示（给大模型的预设规范,输出则生效）", value="", height=200, max_chars=1000, key="system_prompt2")
     print(system_prompt)
@@ -126,7 +136,7 @@ with col11:
     # session state
     if "turbo_history" not in st.session_state:
         st.session_state.turbo_history = [
-            AIMessage(content="你好，我是当前最先进的模型gpt-4-turbo-2024-04-09，有什么可以帮助你的？"),
+            AIMessage(content="你好，朋友，有什么可以帮助你的？"),
         ]
 
     # 设置一个按钮，用于清空除了第一条消息之外的所有消息
