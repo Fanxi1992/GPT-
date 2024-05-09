@@ -9,3 +9,4 @@ cohere==5.3.3
 python-dotenv==1.0.1
 streamlit-extras==0.4.2
 pandas==2.2.2
+langchain_groq==0.1.3
